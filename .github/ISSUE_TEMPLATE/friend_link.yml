@@ -1,12 +1,30 @@
 name: 🤝 申请友情链接
 description: 欢迎交换友链！请填写以下站点信息
-title: "[友链申请]: "
+title: "[申请友链]"
 labels: ["friend-link"]
 body:
   - type: markdown
     attributes:
       value: |
-        感谢申请友链！请确保您的网站已添加本站友链，提交后我会收到实时通知并尽快处理。
+        ### 👋 欢迎申请友链！
+        在提交申请前，请确保您的网站已添加本站友链。本站信息如下：
+        - **站点名称**：咸鱼小窝
+        - **站点链接**：`https://blog.fishqaq.com/`
+        - **站点头像**：`https://blog.fishqaq.com/images/avatar.webp`
+        - **站点简介**：Think Different
+        - **RSS**：`https://blog.fishqaq.com/rss.xml`
+
+  - type: dropdown
+    id: action_type
+    attributes:
+      label: 申请类型
+      description: 请选择本次提交的类型
+      options:
+        - ✨ 新增友链
+        - 🔄 更新已有友链信息（更换域名/头像/简介）
+      default: 0
+    validations:
+      required: true
 
   - type: input
     id: name
@@ -20,6 +38,7 @@ body:
     id: link
     attributes:
       label: 站点链接
+      description: 请填写包含 https:// 的完整主页地址
       placeholder: https://example.com
     validations:
       required: true
@@ -28,14 +47,27 @@ body:
     id: avatar
     attributes:
       label: 站点头像 / Logo
+      description: 请提供正方形、可国内直连加载的图片直链
       placeholder: https://example.com/avatar.png
     validations:
       required: true
 
-  - type: textarea
+  - type: input
     id: descr
     attributes:
       label: 站点简介
+      description: 简短的一句话描述（建议 30 字以内）
       placeholder: 一句话描述你的博客...
     validations:
       required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 申请前确认
+      description: 提交前请确认以下事项：
+      options:
+        - label: 我已在自己的网站中添加了本站的友情链接
+          required: true
+        - label: 我的网站支持 HTTPS 访问，且为持续更新的个人独立博客
+          required: true
