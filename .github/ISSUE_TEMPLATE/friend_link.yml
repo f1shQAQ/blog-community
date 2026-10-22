@@ -1,0 +1,41 @@
+name: 🤝 申请友情链接
+description: 欢迎交换友链！请填写以下站点信息
+title: "[友链申请]: "
+labels: ["friend-link"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢申请友链！请确保您的网站已添加本站友链，提交后我会收到实时通知并尽快处理。
+
+  - type: input
+    id: name
+    attributes:
+      label: 站点名称
+      placeholder: 例如：张三的博客
+    validations:
+      required: true
+
+  - type: input
+    id: link
+    attributes:
+      label: 站点链接
+      placeholder: https://example.com
+    validations:
+      required: true
+
+  - type: input
+    id: avatar
+    attributes:
+      label: 站点头像 / Logo
+      placeholder: https://example.com/avatar.png
+    validations:
+      required: true
+
+  - type: textarea
+    id: descr
+    attributes:
+      label: 站点简介
+      placeholder: 一句话描述你的博客...
+    validations:
+      required: true
