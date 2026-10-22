@@ -1,0 +1,90 @@
+name: 飞书互动通知
+
+on:
+  # 1. 监听友链申请（新建 Issue 或 申请人二次修改了 Issue）
+  issues:
+    types: [opened, edited]
+  # 2. 监听友链下的留言互动
+  issue_comment:
+    types: [created]
+  # 3. 监听博客新评论（当文章首次有人评论，自动创建 Discussion 时）
+  discussion:
+    types: [created]
+  # 4. 监听博客后续评论及回复（别人在 Discussion 下继续盖楼评论时）
+  discussion_comment:
+    types: [created]
+
+jobs:
+  send-to-feishu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 解析事件并推送飞书卡片
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+          EVENT_NAME: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          SENDER: ${{ github.event.sender.login }}
+          # 自动识别是 Issue 还是 Discussion
+          TITLE: ${{ github.event.issue.title || github.event.discussion.title }}
+          # 优先抓取最新评论内容，如果是新建主贴则抓取主贴正文
+          BODY: ${{ github.event.comment.body || github.event.issue.body || github.event.discussion.body }}
+          URL: ${{ github.event.comment.html_url || github.event.issue.html_url || github.event.discussion.html_url }}
+        run: |
+          # 根据触发类型设置卡片标题和顶部颜色
+          if [ "$EVENT_NAME" = "issues" ]; then
+            if [ "$ACTION" = "edited" ]; then
+              HEADER_TITLE="🔄 友链申请信息已更新"
+              COLOR="orange"
+            else
+              HEADER_TITLE="🤝 收到新的友链申请！"
+              COLOR="blue"
+            fi
+          elif [ "$EVENT_NAME" = "issue_comment" ]; then
+            HEADER_TITLE="💬 友链申请有新回复"
+            COLOR="wathet"
+          else
+            HEADER_TITLE="🎉 博客收到新的文章评论！"
+            COLOR="green"
+          fi
+
+          # 使用 jq 安全组装 JSON（防止评论或友链里的换行符、引号导致发送失败）
+          PAYLOAD=$(jq -n \
+            --arg header "$HEADER_TITLE" \
+            --arg color "$COLOR" \
+            --arg title "$TITLE" \
+            --arg sender "$SENDER" \
+            --arg body "$BODY" \
+            --arg url "$URL" \
+            '{
+              msg_type: "interactive",
+              card: {
+                header: {
+                  title: { tag: "plain_text", content: $header },
+                  template: $color
+                },
+                elements: [
+                  {
+                    tag: "div",
+                    text: {
+                      tag: "lark_md",
+                      content: ("**关联主题：**" + $title + "\n**来自用户：**" + $sender + "\n\n**详细内容：**\n" + $body)
+                    }
+                  },
+                  { tag: "hr" },
+                  {
+                    tag: "action",
+                    actions: [
+                      {
+                        tag: "button",
+                        text: { tag: "plain_text", content: "👉 点击前往 GitHub 查看 / 处理" },
+                        type: "primary",
+                        url: $url
+                      }
+                    ]
+                  }
+                ]
+              }
+            }')
+
+          # 发送给飞书自定义机器人
+          curl -s -X POST -H "Content-Type: application/json" -d "$PAYLOAD" "$FEISHU_WEBHOOK"
